@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android" android:layout_width="match_parent" android:layout_height="match_parent" android:background="#070B16" android:fillViewport="true">
+<LinearLayout android:layout_width="match_parent" android:layout_height="match_parent" android:orientation="vertical" android:gravity="center" android:padding="28dp">
+ <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="26dp" android:background="@drawable/bg_header">
+  <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center" android:text="CIPHERFUSION" android:textColor="#FFFFFF" android:textSize="30sp" android:textStyle="bold" android:letterSpacing="0.08"/>
+  <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="5dp" android:gravity="center" android:text="SECURE • SIMPLE • SMART" android:textColor="#55E7FF" android:textSize="12sp" android:textStyle="bold" android:letterSpacing="0.1"/>
+  <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="28dp" android:gravity="center" android:text="SECURE ACCESS" android:textColor="#FFFFFF" android:textSize="21sp" android:textStyle="bold"/>
+  <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="6dp" android:gravity="center" android:text="Sign in to open your encryption workspace" android:textColor="#9EACCA" android:textSize="13sp"/>
+  <EditText android:id="@+id/username" android:layout_width="match_parent" android:layout_height="52dp" android:layout_marginTop="24dp" android:hint="Username" android:textColor="#FFFFFF" android:textColorHint="#586783" android:singleLine="true" android:inputType="text" android:padding="14dp" android:background="@drawable/bg_input"/>
+  <EditText android:id="@+id/password" android:layout_width="match_parent" android:layout_height="52dp" android:layout_marginTop="10dp" android:hint="Password" android:textColor="#FFFFFF" android:textColorHint="#586783" android:singleLine="true" android:inputType="textPassword" android:padding="14dp" android:background="@drawable/bg_input"/>
+  <TextView android:id="@+id/loginButton" android:layout_width="match_parent" android:layout_height="54dp" android:layout_marginTop="16dp" android:gravity="center" android:text="LOGIN" android:textColor="#FFFFFF" android:textSize="13sp" android:textStyle="bold" android:background="@drawable/bg_button_cyan"/>
+  <TextView android:id="@+id/loginStatus" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="14dp" android:gravity="center" android:textColor="#FF7B8A" android:textSize="12sp"/>
+  <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="22dp" android:gravity="center" android:text="Demo access • 3 fixed project accounts" android:textColor="#687894" android:textSize="11sp"/>
+ </LinearLayout>
+</LinearLayout>
+</ScrollView>
