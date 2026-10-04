@@ -4,14 +4,14 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:fillViewport="true"
-    android:background="#070B16">
+    android:background="#070B18"
+    android:fillViewport="true">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="20dp">
+        android:padding="24dp">
 
         <!-- HEADER -->
 
@@ -19,15 +19,16 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:padding="20dp"
-            android:background="@drawable/bg_header">
+            android:gravity="center"
+            android:padding="22dp"
+            android:background="#111B42">
 
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="CIPHERFUSION"
-                android:textColor="#FFFFFF"
-                android:textSize="26sp"
+                android:textColor="#F5F7FF"
+                android:textSize="32sp"
                 android:textStyle="bold"
                 android:letterSpacing="0.08"
                 android:gravity="center"/>
@@ -35,43 +36,84 @@
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="6dp"
+                android:layout_marginTop="8dp"
                 android:text="MEDIA ENCRYPTION"
-                android:textColor="#39D9FF"
-                android:textSize="14sp"
+                android:textColor="#18E0FF"
+                android:textSize="21sp"
                 android:textStyle="bold"
                 android:gravity="center"/>
 
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
+                android:layout_marginTop="5dp"
                 android:text="PHOTO • VIDEO • AUDIO"
-                android:textColor="#8A9BB8"
-                android:textSize="11sp"
+                android:textColor="#9BA8C0"
+                android:textSize="15sp"
                 android:gravity="center"/>
 
         </LinearLayout>
 
 
-        <!-- MODULE DESCRIPTION -->
+        <!-- DESCRIPTION -->
 
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="24dp"
+            android:layout_marginTop="28dp"
             android:text="MEDIA PROTECTION"
-            android:textColor="#39D9FF"
-            android:textSize="13sp"
+            android:textColor="#18E0FF"
+            android:textSize="18sp"
             android:textStyle="bold"/>
 
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="6dp"
+            android:layout_marginTop="8dp"
             android:text="Encrypt photos, videos and audio files using the CipherFusion file engine."
-            android:textColor="#B8C5D9"
-            android:textSize="14sp"/>
+            android:textColor="#AAB5CA"
+            android:textSize="17sp"/>
+
+
+        <!-- SELECT MEDIA -->
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="26dp"
+            android:padding="18dp"
+            android:orientation="vertical"
+            android:background="#11182B">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="SELECT MEDIA"
+                android:textColor="#18E0FF"
+                android:textSize="18sp"
+                android:textStyle="bold"/>
+
+            <Button
+                android:id="@+id/selectMediaButton"
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:layout_marginTop="14dp"
+                android:text="📁  SELECT PHOTO / VIDEO / AUDIO"
+                android:textColor="#06101C"
+                android:textSize="15sp"
+                android:textStyle="bold"
+                android:backgroundTint="#18E0FF"/>
+
+            <TextView
+                android:id="@+id/selectedFile"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="14dp"
+                android:text="No media selected"
+                android:textColor="#E7ECF7"
+                android:textSize="16sp"/>
+
+        </LinearLayout>
 
 
         <!-- SECRET KEY -->
@@ -79,112 +121,120 @@
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="24dp"
+            android:layout_marginTop="26dp"
             android:text="SECRET KEY"
             android:textColor="#FFFFFF"
-            android:textSize="13sp"
+            android:textSize="18sp"
             android:textStyle="bold"/>
 
         <EditText
             android:id="@+id/key"
             android:layout_width="match_parent"
-            android:layout_height="52dp"
-            android:layout_marginTop="8dp"
-            android:background="@drawable/bg_input"
-            android:paddingStart="16dp"
-            android:paddingEnd="16dp"
+            android:layout_height="58dp"
+            android:layout_marginTop="10dp"
+            android:background="#11182B"
             android:hint="Enter encryption key"
-            android:textColorHint="#64748B"
             android:textColor="#FFFFFF"
-            android:textColorHighlight="#39D9FF"
-            android:textSize="15sp"
+            android:textColorHint="#68758F"
+            android:padding="16dp"
             android:singleLine="true"
             android:inputType="textPassword"/>
 
 
-        <!-- SELECTED FILE -->
-
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="22dp"
-            android:text="SELECTED MEDIA"
-            android:textColor="#FFFFFF"
-            android:textSize="13sp"
-            android:textStyle="bold"/>
-
-        <TextView
-            android:id="@+id/selectedFile"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:minHeight="58dp"
-            android:gravity="center_vertical"
-            android:padding="16dp"
-            android:text="No media selected"
-            android:textColor="#8A9BB8"
-            android:textSize="14sp"
-            android:background="@drawable/bg_output"/>
-
-
-        <!-- ACTIONS -->
+        <!-- ACTION BUTTONS -->
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="20dp"
+            android:layout_marginTop="18dp"
             android:orientation="horizontal">
 
             <Button
                 android:id="@+id/encryptButton"
                 android:layout_width="0dp"
-                android:layout_height="54dp"
+                android:layout_height="58dp"
                 android:layout_weight="1"
-                android:layout_marginEnd="6dp"
-                android:text="ENCRYPT MEDIA"
+                android:layout_marginEnd="7dp"
+                android:text="🔐 ENCRYPT"
                 android:textColor="#FFFFFF"
-                android:textSize="12sp"
+                android:textSize="15sp"
                 android:textStyle="bold"
-                android:background="@drawable/bg_button_encrypt"/>
+                android:backgroundTint="#008ED6"/>
 
             <Button
                 android:id="@+id/decryptButton"
                 android:layout_width="0dp"
-                android:layout_height="54dp"
+                android:layout_height="58dp"
                 android:layout_weight="1"
-                android:layout_marginStart="6dp"
-                android:text="DECRYPT MEDIA"
+                android:layout_marginStart="7dp"
+                android:text="🔓 DECRYPT"
                 android:textColor="#FFFFFF"
-                android:textSize="12sp"
+                android:textSize="15sp"
                 android:textStyle="bold"
-                android:background="@drawable/bg_button_purple"/>
+                android:backgroundTint="#7C3CFF"/>
 
         </LinearLayout>
 
 
-        <!-- PROGRESS -->
+        <!-- STATUS -->
 
-        <TextView
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="24dp"
-            android:text="STATUS"
-            android:textColor="#FFFFFF"
-            android:textSize="13sp"
-            android:textStyle="bold"/>
+            android:layout_marginTop="28dp"
+            android:padding="18dp"
+            android:orientation="vertical"
+            android:background="#10192A">
 
-        <TextView
-            android:id="@+id/progress"
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="STATUS"
+                android:textColor="#18E0FF"
+                android:textSize="17sp"
+                android:textStyle="bold"/>
+
+            <TextView
+                android:id="@+id/progress"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:text="Ready"
+                android:textColor="#DCE6F7"
+                android:textSize="17sp"/>
+
+        </LinearLayout>
+
+
+        <!-- RESULT -->
+
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:minHeight="58dp"
-            android:gravity="center_vertical"
-            android:padding="16dp"
-            android:text="Ready"
-            android:textColor="#39D9FF"
-            android:textSize="14sp"
-            android:background="@drawable/bg_output_green"/>
+            android:layout_marginTop="18dp"
+            android:padding="20dp"
+            android:orientation="vertical"
+            android:background="#15112D">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="RESULT"
+                android:textColor="#B66CFF"
+                android:textSize="19sp"
+                android:textStyle="bold"/>
+
+            <TextView
+                android:id="@+id/result"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:text="No operation completed yet."
+                android:textColor="#E8ECF7"
+                android:textSize="16sp"
+                android:lineSpacingExtra="4dp"/>
+
+        </LinearLayout>
 
 
         <!-- SUPPORTED MEDIA -->
@@ -192,41 +242,29 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="24dp"
-            android:orientation="vertical"
+            android:layout_marginTop="18dp"
+            android:layout_marginBottom="24dp"
             android:padding="18dp"
-            android:background="@drawable/bg_card_blue">
+            android:orientation="vertical"
+            android:background="#111B42">
 
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="SUPPORTED MEDIA"
                 android:textColor="#FFFFFF"
-                android:textSize="13sp"
+                android:textSize="17sp"
                 android:textStyle="bold"/>
 
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:text="Photos • Videos • Audio • Documents • Other files"
-                android:textColor="#B8C5D9"
-                android:textSize="13sp"/>
+                android:layout_marginTop="10dp"
+                android:text="Photos • Videos • Audio • .cffile encrypted media"
+                android:textColor="#AAB5CA"
+                android:textSize="16sp"/>
 
         </LinearLayout>
-
-
-        <!-- FOOTER -->
-
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="24dp"
-            android:layout_marginBottom="20dp"
-            android:text="CIPHERFUSION • LOCAL PROCESSING"
-            android:textColor="#52627A"
-            android:textSize="10sp"
-            android:gravity="center"/>
 
     </LinearLayout>
 

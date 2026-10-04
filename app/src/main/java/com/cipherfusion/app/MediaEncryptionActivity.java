@@ -17,20 +17,27 @@ import java.io.OutputStream;
 
 public class MediaEncryptionActivity extends Activity {
 
- private static final int REQUEST_OPEN = 3001;
- private static final int REQUEST_CREATE = 3002;
+ private static final int REQUEST_SELECT_MEDIA = 3001;
+ private static final int REQUEST_CREATE_OUTPUT = 3002;
 
  private EditText key;
+
  private TextView selectedFile;
  private TextView progress;
+ private TextView result;
 
+ private Button selectMediaButton;
  private Button encryptButton;
  private Button decryptButton;
 
  private Uri selected;
  private String selectedName = "";
 
- private boolean decrypt = false;
+ /*
+  * true  = encryption
+  * false = decryption
+  */
+ private boolean pendingEncryption = true;
 
  @Override
  protected void onCreate(Bundle savedInstanceState) {
@@ -45,50 +52,162 @@ public class MediaEncryptionActivity extends Activity {
  private void initializeViews() {
 
   key = findViewById(R.id.key);
+
   selectedFile = findViewById(R.id.selectedFile);
   progress = findViewById(R.id.progress);
+  result = findViewById(R.id.result);
 
-  encryptButton = findViewById(R.id.encryptButton);
-  decryptButton = findViewById(R.id.decryptButton);
+  selectMediaButton =
+          findViewById(R.id.selectMediaButton);
+
+  encryptButton =
+          findViewById(R.id.encryptButton);
+
+  decryptButton =
+          findViewById(R.id.decryptButton);
+
+  selectedFile.setText(
+          "No media selected"
+  );
 
   progress.setText("Ready");
-  selectedFile.setText("No media selected");
+
+  result.setText(
+          "No operation completed yet.\n\n" +
+                  "Select media and choose Encrypt or Decrypt."
+  );
  }
 
  private void initializeButtons() {
 
+  /*
+   * SELECT MEDIA
+   */
+  selectMediaButton.setOnClickListener(
+          v -> openMediaPicker()
+  );
+
+  /*
+   * ENCRYPT MEDIA
+   */
   encryptButton.setOnClickListener(v -> {
 
-   decrypt = false;
+   if (selected == null) {
 
-   openMedia();
+    Toast.makeText(
+            this,
+            "Please select media first",
+            Toast.LENGTH_SHORT
+    ).show();
+
+    progress.setText(
+            "Please select media"
+    );
+
+    return;
+   }
+
+   String keyValue =
+           key.getText()
+                   .toString()
+                   .trim();
+
+   if (keyValue.isEmpty()) {
+
+    keyValue = "CIPHER";
+
+    key.setText(keyValue);
+   }
+
+   pendingEncryption = true;
+
+   createOutputFile();
   });
 
+  /*
+   * DECRYPT MEDIA
+   */
   decryptButton.setOnClickListener(v -> {
 
-   decrypt = true;
+   if (selected == null) {
 
-   openMedia();
+    Toast.makeText(
+            this,
+            "Please select encrypted media first",
+            Toast.LENGTH_SHORT
+    ).show();
+
+    progress.setText(
+            "Please select encrypted media"
+    );
+
+    return;
+   }
+
+   String keyValue =
+           key.getText()
+                   .toString()
+                   .trim();
+
+   if (keyValue.isEmpty()) {
+
+    keyValue = "CIPHER";
+
+    key.setText(keyValue);
+   }
+
+   pendingEncryption = false;
+
+   createOutputFile();
   });
  }
 
- private void openMedia() {
+ /**
+  * Open Android document picker.
+  *
+  * We accept all file types because encrypted media
+  * uses the .cffile extension and Android may not
+  * classify it as image, video, or audio.
+  */
+ private void openMediaPicker() {
 
   Intent intent =
-          new Intent(Intent.ACTION_OPEN_DOCUMENT);
+          new Intent(
+                  Intent.ACTION_OPEN_DOCUMENT
+          );
 
   intent.addCategory(
           Intent.CATEGORY_OPENABLE
   );
 
-  /*
-   * Accept photos, videos and audio.
-   */
   intent.setType("*/*");
+
+  intent.putExtra(
+          Intent.EXTRA_MIME_TYPES,
+          new String[]{
+                  "image/*",
+                  "video/*",
+                  "audio/*",
+                  "application/octet-stream"
+          }
+  );
+
+  try {
+
+   intent.addFlags(
+           Intent.FLAG_GRANT_READ_URI_PERMISSION
+   );
+
+   intent.addFlags(
+           Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION
+   );
+
+  } catch (Exception ignored) {
+  }
 
   startActivityForResult(
           intent,
-          REQUEST_OPEN
+          REQUEST_SELECT_MEDIA
   );
  }
 
@@ -98,36 +217,34 @@ public class MediaEncryptionActivity extends Activity {
          int resultCode,
          Intent data
  ) {
+
   super.onActivityResult(
           requestCode,
           resultCode,
           data
   );
 
-  if (resultCode != RESULT_OK || data == null) {
+  if (resultCode != RESULT_OK ||
+          data == null) {
 
-   progress.setText(
-           "Operation cancelled"
-   );
+   if (requestCode ==
+           REQUEST_SELECT_MEDIA) {
+
+    progress.setText(
+            "Media selection cancelled"
+    );
+
+   } else if (requestCode ==
+           REQUEST_CREATE_OUTPUT) {
+
+    progress.setText(
+            "Output location cancelled"
+    );
+   }
 
    return;
   }
 
-  /*
-   * The second picker is the output-file picker.
-   * Handle it before treating the selected URI
-   * as the source media file.
-   */
-  if (requestCode == REQUEST_CREATE) {
-
-   handleOutput(data.getData());
-
-   return;
-  }
-
-  /*
-   * The first picker is the source-media picker.
-   */
   Uri uri = data.getData();
 
   if (uri == null) {
@@ -139,42 +256,89 @@ public class MediaEncryptionActivity extends Activity {
    return;
   }
 
-  selected = uri;
+  /*
+   * SOURCE MEDIA
+   */
+  if (requestCode ==
+          REQUEST_SELECT_MEDIA) {
 
-  selectedName = getFileName(uri);
+   try {
 
-  if (selectedName == null ||
-          selectedName.trim().isEmpty()) {
+    final int takeFlags =
+            data.getFlags()
+                    & (
+                    Intent.FLAG_GRANT_READ_URI_PERMISSION
+                            |
+                            Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+            );
 
-   selectedName = "media_file";
+    getContentResolver()
+            .takePersistableUriPermission(
+                    uri,
+                    takeFlags
+            );
+
+   } catch (Exception ignored) {
+   }
+
+   selected = uri;
+
+   selectedName =
+           getFileName(uri);
+
+   if (selectedName == null ||
+           selectedName.trim().isEmpty()) {
+
+    selectedName =
+            "selected_media";
+   }
+
+   selectedFile.setText(
+           "✓ " + selectedName
+   );
+
+   progress.setText(
+           "Media selected • Ready"
+   );
+
+   result.setText(
+           "Media selected successfully.\n\n" +
+                   "Input:\n" +
+                   selectedName +
+                   "\n\nChoose Encrypt or Decrypt."
+   );
+
+   return;
   }
 
-  selectedFile.setText(
-          "Selected: " + selectedName
-  );
+  /*
+   * OUTPUT FILE
+   */
+  if (requestCode ==
+          REQUEST_CREATE_OUTPUT) {
 
-  progress.setText(
-          decrypt
-                  ? "Media selected for decryption"
-                  : "Media selected for encryption"
-  );
-
-  createOutputFile();
+   handleOutputSelection(uri);
+  }
  }
 
+ /**
+  * Ask user where to save encrypted/decrypted media.
+  */
  private void createOutputFile() {
 
   String outputName;
 
-  if (decrypt) {
+  if (pendingEncryption) {
 
    outputName =
-           decryptedFileName(selectedName);
+           selectedName + ".cffile";
 
   } else {
 
    outputName =
-           selectedName + ".cffile";
+           decryptedFileName(
+                   selectedName
+           );
   }
 
   Intent intent =
@@ -186,9 +350,16 @@ public class MediaEncryptionActivity extends Activity {
           Intent.CATEGORY_OPENABLE
   );
 
-  intent.setType(
-          "application/octet-stream"
-  );
+  if (pendingEncryption) {
+
+   intent.setType(
+           "application/octet-stream"
+   );
+
+  } else {
+
+   intent.setType("*/*");
+  }
 
   intent.putExtra(
           Intent.EXTRA_TITLE,
@@ -197,11 +368,16 @@ public class MediaEncryptionActivity extends Activity {
 
   startActivityForResult(
           intent,
-          REQUEST_CREATE
+          REQUEST_CREATE_OUTPUT
   );
  }
 
- private void handleOutput(Uri outputUri) {
+ /**
+  * Handle destination selection.
+  */
+ private void handleOutputSelection(
+         Uri outputUri
+ ) {
 
   if (outputUri == null) {
 
@@ -215,16 +391,25 @@ public class MediaEncryptionActivity extends Activity {
   if (selected == null) {
 
    progress.setText(
-           "No input file selected"
+           "Input media is missing"
    );
 
    return;
   }
 
-  doWork(outputUri);
+  doWork(
+          !pendingEncryption,
+          outputUri
+  );
  }
 
- private void doWork(Uri out) {
+ /**
+  * Run encryption/decryption.
+  */
+ private void doWork(
+         boolean decryptMode,
+         Uri outputUri
+ ) {
 
   String keyValue =
           key.getText()
@@ -234,31 +419,41 @@ public class MediaEncryptionActivity extends Activity {
    keyValue = "CIPHER";
   }
 
-  /*
-   * Values used inside lambdas must be final
-   * or effectively final.
-   */
   final String finalKey =
           keyValue;
 
   final Uri inputUri =
           selected;
 
-  final Uri outputUri =
-          out;
-
   final String inputName =
           selectedName;
 
-  final boolean decryptMode =
-          decrypt;
+  final Uri finalOutputUri =
+          outputUri;
 
-  progress.setText(
-          "Processing..."
-  );
+  final boolean finalDecryptMode =
+          decryptMode;
 
+  /*
+   * Disable controls while processing.
+   */
+  selectMediaButton.setEnabled(false);
   encryptButton.setEnabled(false);
   decryptButton.setEnabled(false);
+
+  progress.setText(
+          finalDecryptMode
+                  ? "Preparing decryption..."
+                  : "Preparing encryption..."
+  );
+
+  result.setText(
+          finalDecryptMode
+                  ? "DECRYPTION IN PROGRESS\n\n" +
+                  "Please wait..."
+                  : "ENCRYPTION IN PROGRESS\n\n" +
+                  "Please wait..."
+  );
 
   new Thread(() -> {
 
@@ -277,7 +472,7 @@ public class MediaEncryptionActivity extends Activity {
             OutputStream os =
                     getContentResolver()
                             .openOutputStream(
-                                    outputUri
+                                    finalOutputUri
                             )
     ) {
 
@@ -285,14 +480,14 @@ public class MediaEncryptionActivity extends Activity {
              os == null) {
 
       throw new IOException(
-              "Unable to open file"
+              "Unable to open media"
       );
      }
 
      /*
       * DECRYPT
       */
-     if (decryptMode) {
+     if (finalDecryptMode) {
 
       FileEncryptionEngine.decrypt(
               in,
@@ -302,12 +497,14 @@ public class MediaEncryptionActivity extends Activity {
               (done, totalBytes) ->
                       runOnUiThread(() ->
                               progress.setText(
-                                      "Decrypting - "
-                                              + pct(
-                                              done,
-                                              totalBytes
-                                      )
-                                              + "%"
+                                      "Decrypting • "
+                                              +
+                                              pct(
+                                                      done,
+                                                      totalBytes
+                                              )
+                                              +
+                                              "%"
                               )
                       )
       );
@@ -328,32 +525,87 @@ public class MediaEncryptionActivity extends Activity {
               (done, totalBytes) ->
                       runOnUiThread(() ->
                               progress.setText(
-                                      "Encrypting - "
-                                              + pct(
-                                              done,
-                                              totalBytes
-                                      )
-                                              + "%"
+                                      "Encrypting • "
+                                              +
+                                              pct(
+                                                      done,
+                                                      totalBytes
+                                              )
+                                              +
+                                              "%"
                               )
                       )
       );
      }
     }
 
+    /*
+     * Find output filename.
+     */
+    String outputName =
+            getFileName(
+                    finalOutputUri
+            );
+
+    if (outputName == null ||
+            outputName.trim().isEmpty()) {
+
+     outputName =
+             finalDecryptMode
+                     ? decryptedFileName(
+                     inputName
+             )
+                     : inputName +
+                     ".cffile";
+    }
+
+    final String finalOutputName =
+            outputName;
+
+    /*
+     * SUCCESS
+     */
     runOnUiThread(() -> {
 
      progress.setText(
-             "Completed"
+             finalDecryptMode
+                     ? "✓ Decryption completed"
+                     : "✓ Encryption completed"
      );
 
+     result.setText(
+             (
+                     finalDecryptMode
+                             ? "✓ DECRYPTION COMPLETE"
+                             : "✓ ENCRYPTION COMPLETE"
+             )
+                     +
+                     "\n\nInput Media:\n"
+                     +
+                     inputName
+                     +
+                     "\n\nOutput File:\n"
+                     +
+                     finalOutputName
+                     +
+                     "\n\nStatus:\n"
+                     +
+                     (
+                             finalDecryptMode
+                                     ? "MEDIA RESTORED SUCCESSFULLY"
+                                     : "MEDIA SECURED SUCCESSFULLY"
+                     )
+     );
+
+     selectMediaButton.setEnabled(true);
      encryptButton.setEnabled(true);
      decryptButton.setEnabled(true);
 
      Toast.makeText(
              this,
-             decryptMode
-                     ? "Media decrypted"
-                     : "Media encrypted",
+             finalDecryptMode
+                     ? "Media decrypted successfully"
+                     : "Media encrypted successfully",
              Toast.LENGTH_LONG
      ).show();
     });
@@ -373,10 +625,16 @@ public class MediaEncryptionActivity extends Activity {
      }
 
      progress.setText(
-             "Operation failed: "
-                     + message
+             "✕ Operation failed"
      );
 
+     result.setText(
+             "✕ OPERATION FAILED\n\n"
+                     +
+                     message
+     );
+
+     selectMediaButton.setEnabled(true);
      encryptButton.setEnabled(true);
      decryptButton.setEnabled(true);
 
@@ -391,6 +649,9 @@ public class MediaEncryptionActivity extends Activity {
   }).start();
  }
 
+ /**
+  * Get media size.
+  */
  private long size(Uri uri) {
 
   if (uri == null) {
@@ -439,6 +700,9 @@ public class MediaEncryptionActivity extends Activity {
   return -1;
  }
 
+ /**
+  * Get selected filename.
+  */
  private String getFileName(Uri uri) {
 
   if (uri == null) {
@@ -488,7 +752,12 @@ public class MediaEncryptionActivity extends Activity {
   return null;
  }
 
- private String extension(String name) {
+ /**
+  * Get extension without dot.
+  */
+ private String extension(
+         String name
+ ) {
 
   if (name == null ||
           name.trim().isEmpty()) {
@@ -510,6 +779,9 @@ public class MediaEncryptionActivity extends Activity {
   );
  }
 
+ /**
+  * Create decrypted filename.
+  */
  private String decryptedFileName(
          String name
  ) {
@@ -538,6 +810,9 @@ public class MediaEncryptionActivity extends Activity {
   return "decrypted_" + name;
  }
 
+ /**
+  * Convert progress to percentage.
+  */
  private int pct(
          long done,
          long total
