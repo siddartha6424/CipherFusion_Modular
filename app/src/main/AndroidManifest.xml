@@ -10,10 +10,7 @@
         android:allowBackup="true">
 
         <activity
-            android:name=".MediaEncryptionActivity" />
-
-        <activity
-            android:name=".FileEncryptionActivity" />
+            android:name=".FileMediaEncryptionActivity" />
 
         <activity
             android:name=".DashboardActivity" />

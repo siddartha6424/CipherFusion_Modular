@@ -1,32 +1,190 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android" android:layout_width="match_parent" android:layout_height="match_parent" android:background="#070B16" android:fillViewport="true">
-<LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="18dp">
- <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="22dp" android:background="@drawable/bg_header">
-  <TextView android:id="@+id/dashboardStatus" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="● ACCESS GRANTED" android:textColor="#4DFF9A" android:textSize="12sp" android:textStyle="bold"/>
-  <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:text="CIPHERFUSION" android:textColor="#FFFFFF" android:textSize="28sp" android:textStyle="bold" android:letterSpacing="0.08"/>
-  <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:text="ENCRYPTION SUITE" android:textColor="#55E7FF" android:textSize="12sp" android:textStyle="bold" android:letterSpacing="0.12"/>
+
+<ScrollView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#070B16"
+    android:fillViewport="true">
+
+ <LinearLayout
+     android:layout_width="match_parent"
+     android:layout_height="wrap_content"
+     android:orientation="vertical"
+     android:padding="18dp">
+
+  <!-- HEADER -->
+  <LinearLayout
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:orientation="vertical"
+      android:padding="22dp"
+      android:background="@drawable/bg_header">
+
+   <TextView
+       android:id="@+id/dashboardStatus"
+       android:layout_width="wrap_content"
+       android:layout_height="wrap_content"
+       android:text="● ACCESS GRANTED"
+       android:textColor="#4DFF9A"
+       android:textSize="12sp"
+       android:textStyle="bold" />
+
+   <TextView
+       android:layout_width="wrap_content"
+       android:layout_height="wrap_content"
+       android:layout_marginTop="8dp"
+       android:text="CIPHERFUSION"
+       android:textColor="#FFFFFF"
+       android:textSize="28sp"
+       android:textStyle="bold"
+       android:letterSpacing="0.08" />
+
+   <TextView
+       android:layout_width="wrap_content"
+       android:layout_height="wrap_content"
+       android:layout_marginTop="4dp"
+       android:text="ENCRYPTION SUITE"
+       android:textColor="#55E7FF"
+       android:textSize="12sp"
+       android:textStyle="bold"
+       android:letterSpacing="0.12" />
+
+  </LinearLayout>
+
+  <!-- SECTION TITLE -->
+  <TextView
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:layout_marginTop="22dp"
+      android:text="ENCRYPTION MODULES"
+      android:textColor="#FFFFFF"
+      android:textSize="21sp"
+      android:textStyle="bold" />
+
+  <TextView
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:layout_marginTop="5dp"
+      android:text="Choose a module. Each engine operates independently."
+      android:textColor="#8998B7"
+      android:textSize="13sp" />
+
+  <!-- MODULE 01 : TEXT -->
+  <LinearLayout
+      android:id="@+id/moduleText"
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:layout_marginTop="18dp"
+      android:orientation="vertical"
+      android:padding="16dp"
+      android:background="@drawable/bg_module_card">
+
+   <TextView
+       android:layout_width="wrap_content"
+       android:layout_height="wrap_content"
+       android:text="MODULE 01"
+       android:textColor="#55E7FF"
+       android:textSize="11sp"
+       android:textStyle="bold" />
+
+   <TextView
+       android:layout_width="match_parent"
+       android:layout_height="wrap_content"
+       android:layout_marginTop="6dp"
+       android:text="TEXT ENCRYPTION"
+       android:textColor="#FFFFFF"
+       android:textSize="19sp"
+       android:textStyle="bold" />
+
+   <TextView
+       android:layout_width="match_parent"
+       android:layout_height="wrap_content"
+       android:layout_marginTop="5dp"
+       android:text="Encrypt and decrypt Unicode text with Vigenère-style byte transformation and a 16×16 Polybius square."
+       android:textColor="#AAB8D2"
+       android:textSize="13sp" />
+
+   <TextView
+       android:layout_width="match_parent"
+       android:layout_height="46dp"
+       android:layout_marginTop="14dp"
+       android:gravity="center"
+       android:text="OPEN TEXT MODULE"
+       android:textColor="#FFFFFF"
+       android:textStyle="bold"
+       android:background="@drawable/bg_button_cyan" />
+
+  </LinearLayout>
+
+  <!-- MODULE 02 : FILE + MEDIA -->
+  <LinearLayout
+      android:id="@+id/moduleFile"
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:layout_marginTop="12dp"
+      android:orientation="vertical"
+      android:padding="16dp"
+      android:background="@drawable/bg_module_card">
+
+   <TextView
+       android:layout_width="wrap_content"
+       android:layout_height="wrap_content"
+       android:text="MODULE 02"
+       android:textColor="#C48CFF"
+       android:textSize="11sp"
+       android:textStyle="bold" />
+
+   <TextView
+       android:layout_width="match_parent"
+       android:layout_height="wrap_content"
+       android:layout_marginTop="6dp"
+       android:text="FILE &amp; MEDIA ENCRYPTION"
+       android:textColor="#FFFFFF"
+       android:textSize="19sp"
+       android:textStyle="bold" />
+
+   <TextView
+       android:layout_width="match_parent"
+       android:layout_height="wrap_content"
+       android:layout_marginTop="5dp"
+       android:text="Protect documents, photos, videos, audio and arbitrary files using AES-256-GCM."
+       android:textColor="#AAB8D2"
+       android:textSize="13sp" />
+
+   <TextView
+       android:layout_width="match_parent"
+       android:layout_height="46dp"
+       android:layout_marginTop="14dp"
+       android:gravity="center"
+       android:text="OPEN FILE &amp; MEDIA MODULE"
+       android:textColor="#FFFFFF"
+       android:textStyle="bold"
+       android:background="@drawable/bg_button_purple" />
+
+  </LinearLayout>
+
+  <!-- LOGOUT -->
+  <TextView
+      android:id="@+id/logoutButton"
+      android:layout_width="match_parent"
+      android:layout_height="50dp"
+      android:layout_marginTop="18dp"
+      android:gravity="center"
+      android:text="LOG OUT"
+      android:textColor="#FFFFFF"
+      android:textStyle="bold"
+      android:background="@drawable/bg_button_dark2" />
+
+  <TextView
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:layout_marginTop="18dp"
+      android:gravity="center"
+      android:text="CipherFusion • Secure. Simple. Smart."
+      android:textColor="#687894"
+      android:textSize="11sp" />
+
  </LinearLayout>
- <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="22dp" android:text="ENCRYPTION MODULES" android:textColor="#FFFFFF" android:textSize="21sp" android:textStyle="bold"/>
- <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="5dp" android:text="Choose a module. Each engine operates independently." android:textColor="#8998B7" android:textSize="13sp"/>
- <LinearLayout android:id="@+id/moduleText" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="18dp" android:orientation="vertical" android:background="@drawable/bg_module_card">
-  <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="MODULE 01" android:textColor="#55E7FF" android:textSize="11sp" android:textStyle="bold"/>
-  <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="6dp" android:text="TEXT ENCRYPTION" android:textColor="#FFFFFF" android:textSize="19sp" android:textStyle="bold"/>
-  <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="5dp" android:text="Encrypt and decrypt Unicode text with Vigenère-style byte transformation and a 16×16 Polybius square." android:textColor="#AAB8D2" android:textSize="13sp"/>
-  <TextView android:layout_width="match_parent" android:layout_height="46dp" android:layout_marginTop="14dp" android:gravity="center" android:text="OPEN TEXT MODULE" android:textColor="#FFFFFF" android:textStyle="bold" android:background="@drawable/bg_button_cyan"/>
- </LinearLayout>
- <LinearLayout android:id="@+id/moduleFile" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12dp" android:orientation="vertical" android:background="@drawable/bg_module_card">
-  <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="MODULE 02" android:textColor="#C48CFF" android:textSize="11sp" android:textStyle="bold"/>
-  <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="6dp" android:text="FILE ENCRYPTION" android:textColor="#FFFFFF" android:textSize="19sp" android:textStyle="bold"/>
-  <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="5dp" android:text="Protect documents and arbitrary files using the CipherFusion .cffile container." android:textColor="#AAB8D2" android:textSize="13sp"/>
-  <TextView android:layout_width="match_parent" android:layout_height="46dp" android:layout_marginTop="14dp" android:gravity="center" android:text="OPEN FILE MODULE" android:textColor="#FFFFFF" android:textStyle="bold" android:background="@drawable/bg_button_purple"/>
- </LinearLayout>
- <LinearLayout android:id="@+id/moduleMedia" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12dp" android:orientation="vertical" android:background="@drawable/bg_module_card">
-  <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="MODULE 03" android:textColor="#4DFF9A" android:textSize="11sp" android:textStyle="bold"/>
-  <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="6dp" android:text="MEDIA ENCRYPTION" android:textColor="#FFFFFF" android:textSize="19sp" android:textStyle="bold"/>
-  <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="5dp" android:text="One dedicated module for Photo, Video and Audio encryption." android:textColor="#AAB8D2" android:textSize="13sp"/>
-  <TextView android:layout_width="match_parent" android:layout_height="46dp" android:layout_marginTop="14dp" android:gravity="center" android:text="OPEN MEDIA MODULE" android:textColor="#FFFFFF" android:textStyle="bold" android:background="@drawable/bg_button_encrypt"/>
- </LinearLayout>
- <TextView android:id="@+id/logoutButton" android:layout_width="match_parent" android:layout_height="50dp" android:layout_marginTop="18dp" android:gravity="center" android:text="LOG OUT" android:textColor="#FFFFFF" android:textStyle="bold" android:background="@drawable/bg_button_dark2"/>
- <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="18dp" android:gravity="center" android:text="CipherFusion • Secure. Simple. Smart." android:textColor="#687894" android:textSize="11sp"/>
-</LinearLayout>
+
 </ScrollView>

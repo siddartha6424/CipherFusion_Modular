@@ -1,28 +1,333 @@
 package com.cipherfusion.app;
 
-import java.io.*;
+import android.content.ContentResolver;
+import android.content.Context;
+import android.net.Uri;
+
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
-import java.util.Random;
+import java.security.GeneralSecurityException;
+import java.security.SecureRandom;
+import java.util.Arrays;
+
+import javax.crypto.Cipher;
+import javax.crypto.SecretKey;
+import javax.crypto.SecretKeyFactory;
+import javax.crypto.spec.GCMParameterSpec;
+import javax.crypto.spec.PBEKeySpec;
+import javax.crypto.spec.SecretKeySpec;
 
 public final class FileEncryptionEngine {
- private static final byte[] MAGIC="CFFILE01".getBytes(StandardCharsets.US_ASCII);
- private static final int TABLE_SIZE=256;
- private FileEncryptionEngine(){}
- public static String encrypt(InputStream in, OutputStream out, String key, String extension, long total, Progress p) throws IOException {
-  byte[] kb=keyBytes(key); byte[] table=createTable(kb); int[] pos=new int[256]; for(int i=0;i<256;i++)pos[table[i]&255]=i;
-  DataOutputStream d=new DataOutputStream(new BufferedOutputStream(out)); d.write(MAGIC); byte[] eb=extension.getBytes(StandardCharsets.UTF_8); d.writeShort(eb.length); d.write(eb); d.writeLong(total);
-  BufferedInputStream bin=new BufferedInputStream(in,65536); byte[] buf=new byte[65536]; long done=0; StringBuilder hex=new StringBuilder(131072); int n;
-  while((n=bin.read(buf))!=-1){ for(int i=0;i<n;i++){int v=(buf[i]&255)+(kb[(int)((done+i)%kb.length)]&255)&255; int pp=pos[v]; hex.append(Character.forDigit(pp>>>4,16)); hex.append(Character.forDigit(pp&15,16));} done+=n; if(hex.length()>1048576){d.write(hex.toString().getBytes(StandardCharsets.US_ASCII)); hex.setLength(0);} if(p!=null)p.onProgress(done,total); }
-  if(hex.length()>0)d.write(hex.toString().getBytes(StandardCharsets.US_ASCII)); d.flush(); return extension;
- }
- public static Header readHeader(InputStream in) throws IOException { DataInputStream d=new DataInputStream(new BufferedInputStream(in)); byte[] m=new byte[8]; d.readFully(m); if(!java.util.Arrays.equals(m,MAGIC))throw new IOException("Not a CipherFusion file"); int len=d.readUnsignedShort(); if(len>4096)throw new IOException("Invalid header"); byte[] eb=new byte[len]; d.readFully(eb); long size=d.readLong(); return new Header(d,size,new String(eb,StandardCharsets.UTF_8)); }
- public static void decrypt(InputStream raw, OutputStream out, String key, long total, Progress p) throws IOException {
-  Header h=readHeader(raw); DataInputStream d=h.stream; byte[] kb=keyBytes(key); byte[] table=createTable(kb); BufferedOutputStream bout=new BufferedOutputStream(out,65536); byte[] pair=new byte[2]; long done=0; int a;
-  while((a=d.read())!=-1){ pair[0]=(byte)a; int b=d.read(); if(b==-1)throw new IOException("Truncated ciphertext"); pair[1]=(byte)b; int pos=(hex(pair[0])<<4)|hex(pair[1]); if(pos<0)throw new IOException("Invalid ciphertext"); int v=table[pos]&255; int original=(v-(kb[(int)(done%kb.length)]&255)+256)&255; bout.write(original); done++; if(p!=null)p.onProgress(done,h.originalSize); } bout.flush(); if(done!=h.originalSize)throw new IOException("Size mismatch");
- }
- private static int hex(byte b){int c=b&255; if(c>='0'&&c<='9')return c-'0'; if(c>='a'&&c<='f')return c-'a'+10; if(c>='A'&&c<='F')return c-'A'+10; return -1;}
- private static byte[] keyBytes(String k){if(k==null||k.trim().isEmpty())k="CIPHER"; return k.getBytes(StandardCharsets.UTF_8);}
- private static byte[] createTable(byte[] key){byte[] t=new byte[256]; for(int i=0;i<256;i++)t[i]=(byte)i; long seed=1469598103934665603L; for(byte b:key){seed^=b&255;seed*=1099511628211L;} Random r=new Random(seed); for(int i=255;i>0;i--){int j=r.nextInt(i+1);byte x=t[i];t[i]=t[j];t[j]=x;}return t;}
- public interface Progress{void onProgress(long done,long total);}
- public static final class Header{final DataInputStream stream;final long originalSize;final String extension;Header(DataInputStream s,long z,String e){stream=s;originalSize=z;extension=e;}}
+
+    public interface ProgressListener {
+        void onProgress(long processed, long total);
+    }
+
+    private static final byte[] MAGIC = new byte[] {'C', 'F', 'F', '2'};
+    private static final int VERSION = 1;
+    private static final int SALT_LENGTH = 16;
+    private static final int NONCE_PREFIX_LENGTH = 8;
+    private static final int NONCE_LENGTH = 12;
+    private static final int TAG_LENGTH_BITS = 128;
+    private static final int KEY_LENGTH_BITS = 256;
+    private static final int PBKDF2_ITERATIONS = 150_000;
+    private static final int CHUNK_SIZE = 1024 * 1024;
+    private static final int MAX_NAME_LENGTH = 64 * 1024;
+
+    private FileEncryptionEngine() {}
+
+    public static void encrypt(
+            Context context,
+            Uri inputUri,
+            Uri outputUri,
+            String password,
+            String originalName,
+            ProgressListener listener
+    ) throws Exception {
+        if (password == null || password.isEmpty()) {
+            throw new IllegalArgumentException("Encryption key cannot be empty.");
+        }
+
+        ContentResolver resolver = context.getContentResolver();
+        long total = getSize(resolver, inputUri);
+
+        byte[] salt = new byte[SALT_LENGTH];
+        byte[] noncePrefix = new byte[NONCE_PREFIX_LENGTH];
+        SecureRandom random = new SecureRandom();
+        random.nextBytes(salt);
+        random.nextBytes(noncePrefix);
+
+        SecretKey key = deriveKey(password, salt);
+
+        try (InputStream rawIn = resolver.openInputStream(inputUri);
+             OutputStream rawOut = resolver.openOutputStream(outputUri)) {
+
+            if (rawIn == null) throw new IOException("Unable to open input file.");
+            if (rawOut == null) throw new IOException("Unable to open output file.");
+
+            DataOutputStream out = new DataOutputStream(
+                    new BufferedOutputStream(rawOut, CHUNK_SIZE));
+
+            writeHeader(out, salt, noncePrefix, originalName);
+
+            BufferedInputStream in = new BufferedInputStream(rawIn, CHUNK_SIZE);
+            byte[] plain = new byte[CHUNK_SIZE];
+
+            long processed = 0;
+            int chunkIndex = 0;
+            int read;
+
+            while ((read = readChunk(in, plain)) > 0) {
+                byte[] nonce = buildNonce(noncePrefix, chunkIndex);
+                byte[] aad = buildAad(chunkIndex, read);
+
+                Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
+                cipher.init(Cipher.ENCRYPT_MODE, key,
+                        new GCMParameterSpec(TAG_LENGTH_BITS, nonce));
+                cipher.updateAAD(aad);
+
+                byte[] encrypted = cipher.doFinal(plain, 0, read);
+
+                out.writeInt(read);
+                out.writeInt(encrypted.length);
+                out.write(encrypted);
+
+                processed += read;
+                if (listener != null) listener.onProgress(processed, total);
+
+                chunkIndex++;
+            }
+
+            out.writeInt(0);
+            out.writeInt(0);
+            out.flush();
+        }
+    }
+
+    public static void decrypt(
+            Context context,
+            Uri inputUri,
+            Uri outputUri,
+            String password,
+            ProgressListener listener
+    ) throws Exception {
+        if (password == null || password.isEmpty()) {
+            throw new IllegalArgumentException("Decryption key cannot be empty.");
+        }
+
+        ContentResolver resolver = context.getContentResolver();
+        long total = getEncryptedPlaintextSize(resolver, inputUri);
+
+        try (InputStream rawIn = resolver.openInputStream(inputUri);
+             OutputStream rawOut = resolver.openOutputStream(outputUri)) {
+
+            if (rawIn == null) throw new IOException("Unable to open encrypted file.");
+            if (rawOut == null) throw new IOException("Unable to open output file.");
+
+            DataInputStream in = new DataInputStream(
+                    new BufferedInputStream(rawIn, CHUNK_SIZE));
+            BufferedOutputStream out = new BufferedOutputStream(rawOut, CHUNK_SIZE);
+
+            Header header = readHeader(in);
+            SecretKey key = deriveKey(password, header.salt);
+
+            byte[] encrypted = new byte[CHUNK_SIZE + 32];
+            long processed = 0;
+            int expectedIndex = 0;
+
+            while (true) {
+                int plainLength = in.readInt();
+                int encryptedLength = in.readInt();
+
+                if (plainLength == 0 && encryptedLength == 0) {
+                    break;
+                }
+
+                if (plainLength < 1 || plainLength > CHUNK_SIZE) {
+                    throw new IOException("Invalid encrypted chunk.");
+                }
+                if (encryptedLength < plainLength + 16 ||
+                        encryptedLength > CHUNK_SIZE + 16) {
+                    throw new IOException("Invalid encrypted chunk length.");
+                }
+
+                if (encrypted.length < encryptedLength) {
+                    encrypted = new byte[encryptedLength];
+                }
+
+                in.readFully(encrypted, 0, encryptedLength);
+
+                byte[] nonce = buildNonce(header.noncePrefix, expectedIndex);
+                byte[] aad = buildAad(expectedIndex, plainLength);
+
+                Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
+                cipher.init(Cipher.DECRYPT_MODE, key,
+                        new GCMParameterSpec(TAG_LENGTH_BITS, nonce));
+                cipher.updateAAD(aad);
+
+                byte[] plain = cipher.doFinal(encrypted, 0, encryptedLength);
+
+                if (plain.length != plainLength) {
+                    throw new IOException("Authentication/length verification failed.");
+                }
+
+                out.write(plain);
+                processed += plain.length;
+
+                if (listener != null) listener.onProgress(processed, total);
+                expectedIndex++;
+            }
+
+            out.flush();
+        }
+    }
+
+    private static void writeHeader(
+            DataOutputStream out,
+            byte[] salt,
+            byte[] noncePrefix,
+            String originalName
+    ) throws IOException {
+        byte[] name = originalName == null
+                ? "encrypted_file".getBytes(StandardCharsets.UTF_8)
+                : originalName.getBytes(StandardCharsets.UTF_8);
+
+        if (name.length > MAX_NAME_LENGTH) {
+            throw new IOException("Original filename is too long.");
+        }
+
+        out.write(MAGIC);
+        out.writeInt(VERSION);
+        out.writeInt(CHUNK_SIZE);
+        out.writeInt(salt.length);
+        out.write(salt);
+        out.writeInt(noncePrefix.length);
+        out.write(noncePrefix);
+        out.writeInt(name.length);
+        out.write(name);
+    }
+
+    private static Header readHeader(DataInputStream in) throws IOException {
+        byte[] magic = new byte[4];
+        in.readFully(magic);
+
+        if (!Arrays.equals(MAGIC, magic)) {
+            throw new IOException("Not a CipherFusion CFF2 file.");
+        }
+
+        int version = in.readInt();
+        if (version != VERSION) {
+            throw new IOException("Unsupported CFF2 version: " + version);
+        }
+
+        int chunkSize = in.readInt();
+        if (chunkSize != CHUNK_SIZE) {
+            throw new IOException("Unsupported chunk size.");
+        }
+
+        int saltLength = in.readInt();
+        if (saltLength != SALT_LENGTH) {
+            throw new IOException("Invalid salt.");
+        }
+
+        byte[] salt = new byte[saltLength];
+        in.readFully(salt);
+
+        int prefixLength = in.readInt();
+        if (prefixLength != NONCE_PREFIX_LENGTH) {
+            throw new IOException("Invalid nonce prefix.");
+        }
+
+        byte[] prefix = new byte[prefixLength];
+        in.readFully(prefix);
+
+        int nameLength = in.readInt();
+        if (nameLength < 0 || nameLength > MAX_NAME_LENGTH) {
+            throw new IOException("Invalid original filename.");
+        }
+
+        byte[] name = new byte[nameLength];
+        in.readFully(name);
+
+        return new Header(salt, prefix, new String(name, StandardCharsets.UTF_8));
+    }
+
+    private static SecretKey deriveKey(String password, byte[] salt)
+            throws GeneralSecurityException {
+        PBEKeySpec spec = new PBEKeySpec(
+                password.toCharArray(),
+                salt,
+                PBKDF2_ITERATIONS,
+                KEY_LENGTH_BITS);
+
+        try {
+            SecretKeyFactory factory =
+                    SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256");
+            byte[] keyBytes = factory.generateSecret(spec).getEncoded();
+            return new SecretKeySpec(keyBytes, "AES");
+        } finally {
+            spec.clearPassword();
+        }
+    }
+
+    private static byte[] buildNonce(byte[] prefix, int index) {
+        ByteBuffer buffer = ByteBuffer.allocate(NONCE_LENGTH);
+        buffer.put(prefix);
+        buffer.putInt(index);
+        return buffer.array();
+    }
+
+    private static byte[] buildAad(int index, int plainLength) {
+        ByteBuffer buffer = ByteBuffer.allocate(12);
+        buffer.putInt(VERSION);
+        buffer.putInt(index);
+        buffer.putInt(plainLength);
+        return buffer.array();
+    }
+
+    private static int readChunk(InputStream in, byte[] buffer) throws IOException {
+        int offset = 0;
+        while (offset < buffer.length) {
+            int n = in.read(buffer, offset, buffer.length - offset);
+            if (n == -1) break;
+            if (n == 0) continue;
+            offset += n;
+        }
+        return offset;
+    }
+
+    private static long getSize(ContentResolver resolver, Uri uri) {
+        try (android.database.Cursor cursor = resolver.query(
+                uri, new String[]{"_size"}, null, null, null)) {
+            if (cursor != null && cursor.moveToFirst()) {
+                int index = cursor.getColumnIndex("_size");
+                if (index >= 0 && !cursor.isNull(index)) return cursor.getLong(index);
+            }
+        } catch (Exception ignored) {}
+        return -1;
+    }
+
+    private static long getEncryptedPlaintextSize(
+            ContentResolver resolver, Uri uri) {
+        return -1;
+    }
+
+    private static final class Header {
+        final byte[] salt;
+        final byte[] noncePrefix;
+        final String originalName;
+
+        Header(byte[] salt, byte[] noncePrefix, String originalName) {
+            this.salt = salt;
+            this.noncePrefix = noncePrefix;
+            this.originalName = originalName;
+        }
+    }
 }
